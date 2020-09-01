@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Check fork version tagging
-        if: "github.repository != 'BetonQuest/BetonQuest' && startsWith(github.ref,'refs/tags/v')"
+        if: "github.repository != 'SaltyAimbOtter/BetonQuest' && startsWith(github.ref,'refs/tags/v')"
         run: |
           echo "Version tags are not supported in forks!"
           exit 1
@@ -32,7 +32,7 @@ jobs:
           mkdir build
 
       - name: Generate build number for Development Build
-        if: "github.repository == 'BetonQuest/BetonQuest' && github.event_name != 'pull_request' && !startsWith(github.ref,'refs/tags/v') && ( github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v' ) )"
+        if: "github.repository == 'SaltyAimbOtter/BetonQuest' && github.event_name != 'pull_request' && !startsWith(github.ref,'refs/tags/v') && ( github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v' ) )"
         uses: einaregilsson/build-number@v2
         with:
           token: ${{ secrets.github_token }}
@@ -49,15 +49,15 @@ jobs:
           echo ::set-env name=POM_MAVEN_VERSION::$POM_MAVEN_VERSION
 
       - name: Update Version for Development Build
-        if: "github.repository == 'BetonQuest/BetonQuest' && github.event_name != 'pull_request' && !startsWith(github.ref,'refs/tags/v') && ( github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v' ) )"
+        if: "github.repository == 'SaltyAimbOtter/BetonQuest' && github.event_name != 'pull_request' && !startsWith(github.ref,'refs/tags/v') && ( github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v' ) )"
         run: |
           POM_MAVEN_VERSION=${POM_MAVEN_VERSION}-DEV-${BUILD_NUMBER}
           echo ::set-env name=POM_MAVEN_VERSION::$POM_MAVEN_VERSION
 
       - name: Update Version for Artifact Build
-        if: "github.event_name == 'pull_request' || github.repository != 'BetonQuest/BetonQuest' || !startsWith(github.ref,'refs/tags/v') && github.ref != 'refs/heads/master' && !startsWith(github.ref,'refs/heads/master_v')"
+        if: "github.event_name == 'pull_request' || github.repository != 'SaltyAimbOtter/BetonQuest' || !startsWith(github.ref,'refs/tags/v') && github.ref != 'refs/heads/master' && !startsWith(github.ref,'refs/heads/master_v')"
         run: |
-          if [ ${{ github.repository }} != 'BetonQuest/BetonQuest' ]; then REPO=${{ github.repository }}-; fi
+          if [ ${{ github.repository }} != 'SaltyAimbOtter/BetonQuest' ]; then REPO=${{ github.repository }}-; fi
           POM_MAVEN_VERSION=${POM_MAVEN_VERSION}-DEV-ARTIFACT-${REPO}${{ github.run_number }}
           echo ::set-env name=POM_MAVEN_VERSION::$POM_MAVEN_VERSION
 
@@ -118,16 +118,6 @@ jobs:
           mvn -B verify
           cp target/betonquest*.jar build/output/
           cp target/BetonQuest.jar build/output/
-
-      - name: Publish to Maven Repo
-        if: "github.repository == 'BetonQuest/BetonQuest' && github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v') || startsWith(github.ref,'refs/tags/v') )"
-        run: |
-          mvn -B deploy
-        env:
-          REPOSITORY_ID: ${{ secrets.REPOSITORY_ID }}
-          REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
-          REPOSITORY_USER: ${{ secrets.REPOSITORY_USER }}
-          REPOSITORY_PASS: ${{ secrets.REPOSITORY_PASS }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
@@ -197,7 +187,7 @@ jobs:
 
   deploy-release:
     name: Deploy release
-    if: "always() && github.repository == 'BetonQuest/BetonQuest' && startsWith(github.ref,'refs/tags/v')"
+    if: "always() && github.repository == 'SaltyAimbOtter/BetonQuest' && startsWith(github.ref,'refs/tags/v')"
     needs: [prepare, build, documentation]
     runs-on: ubuntu-latest
 
@@ -248,19 +238,9 @@ jobs:
           VERSION: ${{ env.POM_MAVEN_VERSION }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
-      - name: Publish to Discord
-        if: "always() && github.repository == 'BetonQuest/BetonQuest'"
-        run: |
-          bash .github/scripts/discord.sh
-        env:
-          JOB_STATUS: ${{ job.status }}
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          VERSION: ${{ env.POM_MAVEN_VERSION }}
-          RELEASE: "release"
-
   deploy-snapshot:
     name: Deploy snapshot
-    if: "always() && github.repository == 'BetonQuest/BetonQuest' && github.event_name != 'pull_request' && !startsWith(github.ref,'refs/tags/v') && ( github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v' ) )"
+    if: "always() && github.repository == 'SaltyAimbOtter/BetonQuest' && github.event_name != 'pull_request' && !startsWith(github.ref,'refs/tags/v') && ( github.ref == 'refs/heads/master' || startsWith(github.ref,'refs/heads/master_v' ) )"
     needs: [prepare, build, documentation]
     runs-on: ubuntu-latest
 
@@ -296,29 +276,9 @@ jobs:
           DATE=$(date +%Y-%m-%d)
           sed -i "s~\${current-date}~$DATE~g" ./CHANGELOG.md
 
-      - name: Create snapshot
-        run: |
-          if [ -z ${PASSWORD} ]; then echo "WARNING! You need to pass the SNAPSHOT_UPLOAD_PASSWORD environment variable."; exit 1; fi
-          RESPONSE=$(curl --insecure -F "secret=$PASSWORD" -F "version=$VERSION" -F "versionNumber=$VERSION_NUMBER" -F "runID=$RUN_ID" -F "branch=$BRANCH_NAME" -F "commitHash=$COMMIT_HASH" -F "plugin=$PLUGIN" -F "docs=$DOCS" https://betonquest.pl/api/v1/builds/upload)
-          if [ "${RESPONSE}" != "Upload successful" ]; then echo "WARNING! The upload was not successful. The response was '$RESPONSE'"; exit 1; fi
-        env:
-          PASSWORD: ${{ secrets.SNAPSHOT_UPLOAD_PASSWORD }}
-          RUN_ID: ${{ github.run_id }}
-          COMMIT_HASH: ${{ github.sha }}
-          PLUGIN: "@build/output/BetonQuest.jar"
-          DOCS: "@build/documentation/pdf/BetonQuest.pdf"
-
       - name: Deploy to Github Pages
         run: |
           bash .github/scripts/mkdocs.sh
         env:
           VERSION: ${{ env.POM_MAVEN_VERSION }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-
-      - name: Publish to Discord
-        if: "always() && github.repository == 'BetonQuest/BetonQuest'"
-        run: |
-          bash .github/scripts/discord.sh
-        env:
-          JOB_STATUS: ${{ job.status }}
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
