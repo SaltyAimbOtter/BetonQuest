@@ -1,0 +1,11 @@
+<!-- Notifications -->
+[notify-settings]: /User-Documentation/Notification-Settings
+[notify-styles]: /User-Documentation/Notification-IO's-&-Categories
+
+<!-- Compatibility -->
+[compatibility]: /User-Documentation/Compatibility
+
+<!--Entweder absolute Pfade (gehen wahrscheinlich bei versionierten docs nicht) oder File name Compatibility.md -->
+<!-- Also müssen alle Files einzigartige namen haben -->
+<!-- Nicht sicher ob das außerhalb des directories überhaupt geht -->
+<!-- Siehe: https://github.com/squidfunk/mkdocs-material/discussions/2346 und https://www.mkdocs.org/user-guide/writing-your-docs/#linking-to-pages -->

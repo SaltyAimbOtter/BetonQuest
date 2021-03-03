@@ -1,3 +1,4 @@
+--8<-- "links.txt"
 #Feature List
 
 <u><h4>This page is unfinished and only shows some of our features.</h4></u>
@@ -63,7 +64,7 @@ lines based upon the progress in your old plugin.
 
 If just Beton isn't enough you can always just hook into Skript or Denizen too.
 
-Full list of integrations [here](User-Documentation/Compatibility.md).
+There is a [dedicated page][compatibility] about all integrations.
 
 ##Examples
 
