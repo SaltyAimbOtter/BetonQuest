@@ -44,9 +44,9 @@ public class EntityInteractObjective extends CountingObjective {
 
     private final CompoundLocation loc;
     private final VariableNumber range;
-    protected EntityType mobType;
     private final String customName;
     private final String realName;
+    protected EntityType mobType;
     protected String marked;
     protected Interaction interaction;
     protected boolean cancel;
@@ -169,7 +169,7 @@ public class EntityInteractObjective extends CountingObjective {
             entities = new HashSet<>();
             final String[] entityInstruction = instruction.split(";", 3);
             if (entityInstruction.length >= 2) {
-                Arrays.stream(entityInstruction[2].split("/"))
+                Arrays.stream(entityInstruction[1].split("/"))
                         .map(UUID::fromString)
                         .forEach(entities::add);
             }
